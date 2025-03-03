@@ -1,130 +1,129 @@
 <script lang="ts">
-import { onMounted, onBeforeUnmount, ref, defineComponent } from 'vue';
+import { onMounted, onBeforeUnmount, ref, defineComponent } from 'vue'
 
 type SystemLog = {
-  timestamp: Date;
-  message: string;
+  timestamp: Date
+  message: string
 }
 
 type Chat = {
-  timestamp: Date;
-  message: string;
+  timestamp: Date
+  message: string
 }
 
-let ws: WebSocket;
-const chatListBottomRef = ref<HTMLDivElement | null>(null);
+let ws: WebSocket
+const chatListBottomRef = ref<HTMLDivElement | null>(null)
 
-const chats = ref<Chat[]>([]);
-const message = ref('');
-const systemLog = ref<SystemLog[]>([]);
-const connectionStatus = ref<'connected' | 'disconnected' | 'connecting'>('disconnected');
-const reconnectionAttempts = ref(0);
-const maxReconnectionAttempts = 3;
+const chats = ref<Chat[]>([])
+const message = ref('')
+const systemLog = ref<SystemLog[]>([])
+const connectionStatus = ref<'connected' | 'disconnected' | 'connecting'>('disconnected')
+const reconnectionAttempts = ref(0)
+const maxReconnectionAttempts = 3
 
 function log(message: string) {
-  console.log(message);
+  console.log(message)
   systemLog.value.push({
     timestamp: new Date(),
     message,
-  });
+  })
 }
 
 function scrollToBottom(delay = 0) {
   setTimeout(() => {
-    chatListBottomRef.value?.scrollIntoView({ behavior: 'smooth' });
-  }, delay);
+    chatListBottomRef.value?.scrollIntoView({ behavior: 'smooth' })
+  }, delay)
 }
 
 function reconnect() {
   if (reconnectionAttempts.value < maxReconnectionAttempts) {
-    reconnectionAttempts.value++;
-    setTimeout(connect, 1000); // Reconnect after 1 second
+    reconnectionAttempts.value++
+    setTimeout(connect, 1000) // Reconnect after 1 second
   } else {
-    log(`Failed to reconnect after few attempts. Please try again later.`);
+    log(`Failed to reconnect after few attempts. Please try again later.`)
   }
 }
 
 function connect() {
-  const url = import.meta.env.VITE_WS_URL;
+  const url = import.meta.env.VITE_WS_URL
   if (!url) {
-    throw new Error("WS_URL is not defined in the environment variables.");
+    throw new Error('WS_URL is not defined in the environment variables.')
   }
 
-  log(`Connecting to server...`);
-  connectionStatus.value = 'connecting';
+  log(`Connecting to server...`)
+  connectionStatus.value = 'connecting'
 
-  ws = new WebSocket(`${url}/ws`);
+  ws = new WebSocket(`${url}/ws`)
 
   ws.onopen = function () {
-    log("Connected to server.");
-    connectionStatus.value = 'connected';
-  };
+    log('Connected to server.')
+    connectionStatus.value = 'connected'
+  }
 
   ws.onmessage = function (event) {
     chats.value.push({
       timestamp: new Date(),
       message: event.data,
-    });
+    })
 
-    scrollToBottom(300);
-  };
+    scrollToBottom(300)
+  }
 
   ws.onclose = function () {
-    log("Disconnected from server.");
+    log('Disconnected from server.')
     if (reconnectionAttempts.value >= maxReconnectionAttempts) {
-      connectionStatus.value = 'disconnected';
+      connectionStatus.value = 'disconnected'
     }
-    reconnect();
-  };
+    reconnect()
+  }
 
   ws.onerror = function (error) {
-    console.log("error: " + JSON.stringify(error));
-  };
+    console.log('error: ' + JSON.stringify(error))
+  }
 }
 
 function connectManually() {
-  reconnectionAttempts.value = 0;
-  connect();
+  reconnectionAttempts.value = 0
+  connect()
 }
 
 // Function to send a message
 function sendMessage(msg: string) {
-  if (msg.trim() === "") {
-    return;
+  if (msg.trim() === '') {
+    return
   }
 
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-
-    log("not connected to server.");
-    return;
+    log('not connected to server.')
+    return
   }
 
-  ws.send(msg);
-  message.value = ''; // Clear the input after sending
+  ws.send(msg)
+  message.value = '' // Clear the input after sending
   chats.value.push({
     timestamp: new Date(),
     message: msg,
-  });
+  })
 
   // Scroll to the bottom of the chat list
-  scrollToBottom();
+  scrollToBottom()
 }
 
 function clearChat() {
-  chats.value = [];
+  chats.value = []
 }
 
 export default defineComponent({
   setup() {
     // Set up connection when component is mounted
-    onMounted(connect);
+    onMounted(connect)
 
     // Cleanup connection when component is unmounted
     onBeforeUnmount(() => {
       if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
+        ws.close()
       }
-    });
+    })
 
     return {
       message,
@@ -135,10 +134,9 @@ export default defineComponent({
       chatListBottomRef,
       connectionStatus,
       connectManually,
-    };
-  }
-});
-
+    }
+  },
+})
 </script>
 
 <template>
@@ -151,13 +149,17 @@ export default defineComponent({
           <p>{{ log.message }}</p>
         </li>
       </ul>
-      <div class="status" :class="{
-        'statusOn': connectionStatus === 'connected',
-        'statusOff': connectionStatus === 'disconnected',
-        'statusConnecting': connectionStatus === 'connecting'
-      }">
+      <div
+        class="status"
+        :class="{
+          statusOn: connectionStatus === 'connected',
+          statusOff: connectionStatus === 'disconnected',
+          statusConnecting: connectionStatus === 'connecting',
+        }"
+      >
         <span class="statusText">{{ connectionStatus }}</span>
-        <div v-if="connectionStatus === 'disconnected'" class="btnConnect" @click="connectManually"><span>Connect</span>
+        <div v-if="connectionStatus === 'disconnected'" class="btnConnect" @click="connectManually">
+          <span>Connect</span>
         </div>
       </div>
     </div>
@@ -177,10 +179,13 @@ export default defineComponent({
       </ul>
 
       <div class="inputContainer">
-        <input v-model="message" @keyup.enter="sendMessage(message)" placeholder="Type a message..." class="input" />
-        <button class="send" @click="sendMessage(message)">
-          Send
-        </button>
+        <input
+          v-model="message"
+          @keyup.enter="sendMessage(message)"
+          placeholder="Type a message..."
+          class="input"
+        />
+        <button class="send" @click="sendMessage(message)">Send</button>
       </div>
     </div>
   </div>
@@ -333,7 +338,7 @@ hr {
 }
 
 .statusConnecting {
-  background-color: #EB5B00;
+  background-color: #eb5b00;
 }
 
 .statusText {
