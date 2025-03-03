@@ -17,6 +17,11 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/public-chat',
+      name: 'Public Chat',
+      component: () => import('../views/PublicChatView.vue'),
+    },
   ],
 })
 

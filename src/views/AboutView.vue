@@ -1,15 +1,7 @@
 <template>
   <div class="about">
-    <h1>This is an about page</h1>
+    <p>Hi! this chat app purpose is for me to learn Vue and some other tech stack. Check out my other projects
+      <a href="https://fahrimz.github.io">here</a>.
+    </p>
   </div>
 </template>
-
-<style>
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
-}
-</style>
